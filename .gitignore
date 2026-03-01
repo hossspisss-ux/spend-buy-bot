@@ -1,0 +1,34 @@
+# Системные файлы
+*.db
+*.pyc
+__pycache__/
+venv/
+env/
+.venv/
+.env/
+
+# Системные папки Windows
+Desktop/
+Documents/
+Downloads/
+AppData/
+Contacts/
+Favorites/
+Links/
+Music/
+Videos/
+Saved Games/
+Searches/
+Intel/
+IntelGraphicsProfiles/
+*.dat
+*.LOG1
+*.LOG2
+*.ini
+*.DAT*
+*.TM.blf
+*.regtrans-ms
+
+# Файлы проекта
+data.db
+*.log

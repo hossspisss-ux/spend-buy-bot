@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+    <!-- Курсы валют -->
+    <div class="card">
+        <div class="card-header">💱 КУРСЫ ВАЛЮТ</div>
+        <div class="card-body">
+            <table>
+                <tr>
+                    <th>ВАЛЮТА</th>
+                    <th>КУРС</th>
+                    <th></th>
+                </tr>
+                {% for c in currency %}
+                <tr>
+                    <td>
+                        {% if c.name == 'CNY' %}🇨🇳 Китай ({{ c.symbol }})
+                        {% elif c.name == 'JPY' %}🇯🇵 Япония ({{ c.symbol }})
+                        {% elif c.name == 'KRW' %}🇰🇷 Корея ({{ c.symbol }})
+                        {% elif c.name == 'USD' %}🇺🇸 США ({{ c.symbol }})
+                        {% endif %}
+                    </td>
+                    <td>{{ c.value }} ₽</td>
+                    <td>
+                        <button onclick="updateCurrency('{{ c.name }}', {{ c.value }})">✎</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+    
+    <!-- Тарифы доставки -->
+    <div class="card">
+        <div class="card-header">📦 ТАРИФЫ ДОСТАВКИ</div>
+        <div class="card-body">
+            <table>
+                <tr>
+                    <th>СТРАНА</th>
+                    <th>ТИП</th>
+                    <th>СРОКИ (дни)</th>
+                    <th>ЦЕНА/КГ</th>
+                    <th></th>
+                </tr>
+                {% for d in delivery %}
+                <tr>
+                    <td>
+                        {% if d.country == 'Япония' %}🇯🇵
+                        {% elif d.country == 'Китай' %}🇨🇳
+                        {% elif d.country == 'Корея' %}🇰🇷
+                        {% elif d.country == 'США' %}🇺🇸
+                        {% endif %}
+                        {{ d.country }}
+                    </td>
+                    <td>{{ d.type }}</td>
+                    <td>
+                        <span class="days-display" id="days-{{ d.id }}">{{ d.days_min }}-{{ d.days_max }}</span>
+                    </td>
+                    <td>
+                        <span class="price-display" id="price-{{ d.id }}">{{ d.price_per_kg }}</span> ₽
+                    </td>
+                    <td>
+                        <button onclick="editDelivery({{ d.id }})" style="background:#2a2a2a;">✎</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Формы для обновления -->
+<form id="currencyForm" method="POST" style="display:none;">
+    <input type="number" step="0.01" name="value" id="currencyVal">
+</form>
+
+<form id="deliveryForm" method="POST" style="display:none;">
+    <input type="number" name="price" id="deliveryPrice">
+    <input type="number" name="days_min" id="deliveryDaysMin">
+    <input type="number" name="days_max" id="deliveryDaysMax">
+</form>
+
+<script>
+function updateCurrency(name, current) {
+    let newVal = prompt('Новый курс для ' + name, current);
+    if (newVal && !isNaN(newVal) && parseFloat(newVal) > 0) {
+        let form = document.getElementById('currencyForm');
+        form.action = '/currency/update/' + name;
+        document.getElementById('currencyVal').value = newVal;
+        form.submit();
+    }
+}
+
+function editDelivery(id) {
+    // Получаем текущие значения
+    let daysSpan = document.getElementById('days-' + id);
+    let priceSpan = document.getElementById('price-' + id);
+    
+    let daysText = daysSpan.innerText;
+    let currentPrice = priceSpan.innerText;
+    
+    // Разбираем сроки
+    let daysParts = daysText.split('-');
+    let currentMin = daysParts[0];
+    let currentMax = daysParts[1];
+    
+    // Создаем модальное окно для редактирования
+    let modal = document.createElement('div');
+    modal.style.position = 'fixed';
+    modal.style.top = '0';
+    modal.style.left = '0';
+    modal.style.width = '100%';
+    modal.style.height = '100%';
+    modal.style.backgroundColor = 'rgba(0,0,0,0.8)';
+    modal.style.display = 'flex';
+    modal.style.justifyContent = 'center';
+    modal.style.alignItems = 'center';
+    modal.style.zIndex = '1000';
+    
+    modal.innerHTML = `
+        <div style="background:#111; padding:30px; border:1px solid #333; width:400px;">
+            <h3 style="margin-bottom:20px;">✎ РЕДАКТИРОВАТЬ ДОСТАВКУ</h3>
+            <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px; color:#888;">Цена за кг (₽)</label>
+                <input type="number" id="modal-price" value="${currentPrice}" style="width:100%; padding:10px; background:#222; border:1px solid #444; color:#fff;">
+            </div>
+            <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px; color:#888;">Минимальный срок (дней)</label>
+                <input type="number" id="modal-min" value="${currentMin}" style="width:100%; padding:10px; background:#222; border:1px solid #444; color:#fff;">
+            </div>
+            <div style="margin-bottom:20px;">
+                <label style="display:block; margin-bottom:5px; color:#888;">Максимальный срок (дней)</label>
+                <input type="number" id="modal-max" value="${currentMax}" style="width:100%; padding:10px; background:#222; border:1px solid #444; color:#fff;">
+            </div>
+            <div style="display:flex; gap:10px;">
+                <button onclick="submitDelivery(${id})" style="flex:1; background:#2a6f2a;">СОХРАНИТЬ</button>
+                <button onclick="closeModal()" style="flex:1; background:#6f2a2a;">ОТМЕНА</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Функции для модального окна
+    window.closeModal = function() {
+        document.body.removeChild(modal);
+    };
+    
+    window.submitDelivery = function(id) {
+        let newPrice = document.getElementById('modal-price').value;
+        let newMin = document.getElementById('modal-min').value;
+        let newMax = document.getElementById('modal-max').value;
+        
+        if (!newPrice || !newMin || !newMax) {
+            alert('Заполните все поля');
+            return;
+        }
+        
+        if (parseInt(newMin) > parseInt(newMax)) {
+            alert('Минимальный срок не может быть больше максимального');
+            return;
+        }
+        
+        let form = document.getElementById('deliveryForm');
+        form.action = '/delivery/update/' + id;
+        document.getElementById('deliveryPrice').value = newPrice;
+        document.getElementById('deliveryDaysMin').value = newMin;
+        document.getElementById('deliveryDaysMax').value = newMax;
+        form.submit();
+    };
+}
+</script>
+{% endblock %}

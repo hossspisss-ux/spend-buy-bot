@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="stats">
+    <div class="stat">
+        <div class="num">{{ total }}</div>
+        <div class="label">ВСЕГО</div>
+    </div>
+    <div class="stat">
+        <div class="num">{{ clients }}</div>
+        <div class="label">КЛИЕНТЫ</div>
+    </div>
+    <div class="stat">
+        <div class="num">{{ active }}</div>
+        <div class="label">АКТИВНЫЕ</div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">ПОСЛЕДНИЕ ЗАКАЗЫ</div>
+    <div class="card-body">
+        <table>
+            <tr>
+                <th>НОМЕР</th>
+                <th>ТОВАР</th>
+                <th>СТАТУС</th>
+                <th>КЛИЕНТ</th>
+                <th>ДАТА</th>
+            </tr>
+            {% for o in orders %}
+            <tr>
+                <td>{{ o.code }}</td>
+                <td>{{ o.product }}</td>
+                <td>
+                    {% if o.status == 'Выкуплен' %}🛒
+                    {% elif o.status == 'Едет на склад' %}🚚
+                    {% elif o.status == 'На складе' %}📦
+                    {% elif o.status == 'В пути на таможню' %}✈️
+                    {% elif o.status == 'На таможне' %}🛃
+                    {% elif o.status == 'На таможне в РФ' %}🛃
+                    {% elif o.status == 'Выпущен с таможни' %}✅
+                    {% elif o.status == 'Передан в СДЭК' %}📮
+                    {% elif o.status == 'В ПВЗ СДЭК' %}📍
+                    {% endif %}
+                    {{ o.status }}
+                </td>
+                <td>{{ o.user_id or '-' }}</td>
+                <td>{{ o.created[:10] }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Spend Buy</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #000; color: #fff; font-family: Arial; }
+        .nav { background: #111; padding: 15px 30px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; }
+        .nav a { color: #fff; text-decoration: none; margin: 0 15px; padding: 5px 0; border-bottom: 1px solid transparent; }
+        .nav a:hover { border-bottom-color: #fff; }
+        .container { padding: 30px; max-width: 1200px; margin: 0 auto; }
+        .card { background: #111; border: 1px solid #333; margin-bottom: 20px; }
+        .card-header { padding: 15px 20px; border-bottom: 1px solid #333; font-weight: bold; }
+        .card-body { padding: 20px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 10px; background: #222; color: #aaa; font-weight: normal; }
+        td { padding: 10px; border-bottom: 1px solid #222; }
+        input, select { background: #222; border: 1px solid #444; color: #fff; padding: 8px; width: 100%; }
+        button { background: #333; border: 1px solid #555; color: #fff; padding: 8px 15px; cursor: pointer; }
+        button:hover { background: #444; }
+        .flash { padding: 10px; margin-bottom: 15px; border-left: 3px solid; }
+        .flash.success { background: #1a2a1a; border-left-color: #0f0; color: #0f0; }
+        .flash.error { background: #2a1a1a; border-left-color: #f00; color: #f00; }
+        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
+        .stat { background: #111; padding: 20px; text-align: center; border: 1px solid #333; }
+        .stat .num { font-size: 2em; font-weight: bold; }
+        .stat .label { color: #888; margin-top: 5px; }
+        .badge { display: inline-block; padding: 3px 8px; border-radius: 3px; font-size: 0.9em; }
+        .badge.warning { background: #332e1a; color: #fc0; }
+        .badge.info { background: #1a2a33; color: #6cf; }
+        .badge.success { background: #1a331a; color: #0f0; }
+    </style>
+</head>
+<body>
+    {% if session.auth %}
+    <div class="nav">
+        <div>SPEND BUY 2.1</div>
+        <div>
+            <a href="{{ url_for('dashboard') }}">Главная</a>
+            <a href="{{ url_for('orders') }}">Заказы</a>
+            <a href="{{ url_for('users') }}">Клиенты</a>
+            <a href="{{ url_for('settings') }}">Настройки</a>
+            <a href="{{ url_for('logout') }}">Выход</a>
+        </div>
+    </div>
+    {% endif %}
+    
+    <div class="container">
+        {% with msgs = get_flashed_messages(with_categories=true) %}
+            {% if msgs %}
+                {% for cat, msg in msgs %}
+                    <div class="flash {{ cat }}">{{ msg }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>

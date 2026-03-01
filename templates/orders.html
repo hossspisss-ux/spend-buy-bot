@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">➕ НОВЫЙ ЗАКАЗ</div>
+    <div class="card-body">
+        <form method="post" action="/order/add">
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr auto; gap: 10px;">
+                <input type="text" name="code" placeholder="НОМЕР" required>
+                <input type="text" name="product" placeholder="ТОВАР" required>
+                <input type="number" name="price" placeholder="ЦЕНА" value="0">
+                <select name="status">
+                    {% for s in statuses %}
+                    <option value="{{ s.status_name }}">{{ s.icon }} {{ s.status_name }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit">ДОБАВИТЬ</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">📋 ВСЕ ЗАКАЗЫ</div>
+    <div class="card-body">
+        <table>
+            <tr>
+                <th>НОМЕР</th>
+                <th>ТОВАР</th>
+                <th>СТАТУС</th>
+                <th>КЛИЕНТ</th>
+                <th>ЦЕНА</th>
+                <th>ДАТА</th>
+                <th></th>
+            </tr>
+            {% for o in orders %}
+            <tr>
+                <td><strong>{{ o.code }}</strong></td>
+                <td>{{ o.product }}</td>
+                <td>
+                    {% if o.status == 'Выкуплен' %}🛒
+                    {% elif o.status == 'Едет на склад' %}🚚
+                    {% elif o.status == 'На складе' %}📦
+                    {% elif o.status == 'В пути на таможню' %}✈️
+                    {% elif o.status == 'На таможне' %}🛃
+                    {% elif o.status == 'На таможне в РФ' %}🛃
+                    {% elif o.status == 'Выпущен с таможни' %}✅
+                    {% elif o.status == 'Передан в СДЭК' %}📮
+                    {% elif o.status == 'В ПВЗ СДЭК' %}📍
+                    {% endif %}
+                    {{ o.status }}
+                </td>
+                <td>
+                    {% if o.user_id %}
+                        <span style="color:#0f0;">{{ o.user_id }}</span>
+                    {% else %}
+                        <span style="color:#666;">—</span>
+                    {% endif %}
+                </td>
+                <td>{{ o.price }} ₽</td>
+                <td>{{ o.created[:16] }}</td>
+                <td>
+                    <button onclick="updateStatus('{{ o.code }}')" style="background:#2a2a2a;">✎</button>
+                    <form method="post" action="/order/delete/{{ o.code }}" style="display:inline" onsubmit="return confirm('Удалить?')">
+                        <button type="submit" style="background:#331111;">✕</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</div>
+
+<form id="statusForm" method="POST" style="display:none;">
+    <input type="hidden" name="status" id="statusInput">
+</form>
+
+<script>
+function updateStatus(code) {
+    let statuses = [
+        {% for s in statuses %}
+        '{{ s.status_name }}'{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ];
+    
+    let icons = [
+        {% for s in statuses %}
+        '{{ s.icon }}'{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ];
+    
+    let current = '';
+    let rows = document.querySelectorAll('tr');
+    for (let r of rows) {
+        if (r.innerHTML.includes(code)) {
+            for (let i = 0; i < statuses.length; i++) {
+                if (r.innerHTML.includes(statuses[i])) {
+                    current = statuses[i];
+                    break;
+                }
+            }
+            break;
+        }
+    }
+    
+    let menu = 'ВЫБЕРИТЕ НОВЫЙ СТАТУС:\n\n';
+    for (let i = 0; i < statuses.length; i++) {
+        let mark = (statuses[i] == current) ? '✓ ' : '  ';
+        menu += `${i+1}. ${mark}${icons[i]} ${statuses[i]}\n`;
+    }
+    menu += '\nВведите номер (1-9):';
+    
+    let choice = prompt(menu);
+    if (choice && !isNaN(choice) && parseInt(choice) >= 1 && parseInt(choice) <= statuses.length) {
+        let newStatus = statuses[parseInt(choice)-1];
+        document.getElementById('statusInput').value = newStatus;
+        let form = document.getElementById('statusForm');
+        form.action = '/order/update/' + code;
+        form.submit();
+    }
+}
+</script>
+{% endblock %}
